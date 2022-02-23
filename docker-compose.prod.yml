@@ -17,7 +17,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: ./compose/nginx/Dockerfile
+      dockerfile: ./compose/nginx/prod/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_nginx"
     ports:
       - "80:80"
