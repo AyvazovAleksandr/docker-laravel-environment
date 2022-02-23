@@ -1,13 +1,17 @@
 version: "3.7" #https://docs.docker.com/compose/compose-file/compose-versioning/
 
 #Docker Networks
+# networks:
+#   laravel_net_prod:
+#     name: ${NETWORK_NAME_PROD}
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: ${NETWORK_IP_PROD}
+
 networks:
   laravel_net_prod:
     name: ${NETWORK_NAME_PROD}
-    ipam:
-      driver: default
-      config:
-        - subnet: ${NETWORK_IP_PROD}
 
 #Volumes
 volumes:
