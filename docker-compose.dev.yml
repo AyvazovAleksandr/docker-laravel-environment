@@ -4,7 +4,10 @@ version: "3.7" #https://docs.docker.com/compose/compose-file/compose-versioning/
 networks:
   laravel_net_dev:
     name: ${NETWORK_NAME_DEV}
-    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_IP_DEV}
 
 #Volumes
 volumes:
@@ -20,7 +23,9 @@ services:
       dockerfile: ./compose/nginx/dev/Dockerfile
     container_name: "${PROJECT_PREFIX_DEV}_nginx"
     ports:
-      - "80:80"
+      - ${NGINX_CONF_EXTERNAl_IP_DEV}:80:80
+      - ${NGINX_CONF_EXTERNAl_IP_DEV}:443:443
+      # - "80:80"
       # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
       #- "9001:9001"
     volumes:
