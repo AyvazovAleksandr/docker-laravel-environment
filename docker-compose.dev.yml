@@ -2,13 +2,14 @@ version: "3.7" #https://docs.docker.com/compose/compose-file/compose-versioning/
 
 #Docker Networks
 networks:
-  laravel_net:
+  laravel_net_dev:
     name: ${NETWORK_NAME_DEV}
     driver: bridge
 
 #Volumes
 volumes:
   dbdata:
+    name: "${PROJECT_PREFIX_DEV}_dbdata"
     driver: local
 
 # Workflow
@@ -17,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/nginx/Dockerfile
-    container_name: nginx
+    container_name: "${PROJECT_PREFIX_DEV}_nginx"
     ports:
       - "80:80"
       # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
@@ -33,41 +34,41 @@ services:
       - php
       - mysql
     networks:
-      - laravel
+      - laravel_net_dev
 
   mysql:
     image: mysql:5.7.29 # Имя образа и его версия
-    container_name: mysql # Имя контейнера, по котому к нему можно обратиться
+    container_name: "${PROJECT_PREFIX_DEV}_mysql"
     restart: unless-stopped # Всегда перезапускайте контейнер, если он останавливается, за исключением того, что при остановке контейнера (вручную или иным образом) он не перезапускается даже после перезапуска демона Docker.always
     tty: true #подключает виртуальную консоль. Это нужно, чтобы команда cat не завершала работу, иначе контейнер остановится.
     ports:
       - "3306:3306" # Порты, которые пробросили локальныйПорт:портКонтейнера
     environment: # Переменные из .env
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE_DEV}
+      MYSQL_USER: ${DB_USERNAME_DEV}
+      MYSQL_PASSWORD: ${DB_PASSWORD_DEV}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_DEV}
     volumes:
       #- ./compose/mysql/my.cnf:/etc/mysql/my.cnf # Конфиги
-      - dbdata:/var/lib/mysql/ # Место где БД хранится, можно и локальный волум.
+      - dbdata:/var/lib/mysql/ # Место где БД хранится, можно и локальный volume.
       - ./docker-logs/mysql:/var/log/mysql
     networks:
-      - laravel
+      - laravel_net_dev
 
   redis:
     image: "redis:alpine"
-    container_name: redis
+    container_name: "${PROJECT_PREFIX_DEV}_redis"
     restart: unless-stopped
     ports:
       - "6379:6379"
     networks:
-      - laravel
+      - laravel_net_dev
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
+    container_name: "${PROJECT_PREFIX_DEV}_phpmyadmin"
     environment:
-      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_DEV}
       PMA_HOST: mysql
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
@@ -79,7 +80,7 @@ services:
     volumes:
       - /sessions
     networks:
-      - laravel
+      - laravel_net_dev
     links:
       - mysql
 
@@ -87,9 +88,9 @@ services:
     build:
       context: .
       dockerfile: ./compose/php/Dockerfile
-    container_name: php
+    container_name: "${PROJECT_PREFIX_DEV}_php"
     volumes:
-      - ./www/laravel.loc:/var/www/html:delegated
+      - ./www/ssuccessv2.com:/var/www/html:delegated # Каталог, где будет жить наш проект
       # Enable xdebug
       - ./compose/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       # Custom php.ini
@@ -97,32 +98,31 @@ services:
       # Error log
       - ./docker-logs/php/php_errors.log:/var/log/php_errors.log
       - ./docker-logs/php/fpm-php.www.log:/var/log/fpm-php.www.log
-    
     ports:
       - "9000:9000"
     networks:
-      - laravel
+      - laravel_net_dev
 
   composer:
     build:
       context: .
       dockerfile: ./compose/php/composer/Dockerfile
-    container_name: composer
+    container_name: "${PROJECT_PREFIX_DEV}_composer"
     volumes:
-      - ./www/laravel.loc:/var/www/html
+      - ./www/ssuccessv2.com:/var/www/html # Каталог, где будет жить наш проект
     working_dir: /var/www/html
     depends_on:
       - php
     user: laravel
     networks:
-      - laravel
+      - laravel_net_dev
     entrypoint: ['composer', '--ignore-platform-reqs']
 
   npm:
     image: node:15.0.1
-    container_name: npm
+    container_name: "${PROJECT_PREFIX_DEV}_npm"
     volumes:
-      - ./www/laravel.loc:/var/www/html
+      - ./www/ssuccessv2.com:/var/www/html
     working_dir: /var/www/html
     entrypoint: ['npm']
 
@@ -130,13 +130,13 @@ services:
     build:
       context: .
       dockerfile: ./compose/php/Dockerfile
-    container_name: artisan
+    container_name: "${PROJECT_PREFIX_DEV}_artisan"
     volumes:
-      - ./www/laravel.loc:/var/www/html:delegated
+      - ./www/ssuccessv2.com:/var/www/html:delegated
     depends_on:
       - mysql
     working_dir: /var/www/html
     user: laravel
     entrypoint: ['php', '/var/www/html/artisan']
     networks:
-      - laravel
+      - laravel_net_dev
