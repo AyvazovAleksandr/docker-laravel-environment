@@ -23,8 +23,8 @@ services:
       dockerfile: ./compose/nginx/prod/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_nginx"
     ports:
-      - ${NGINX_CONF_EXTERNAl_IP_PROD}:80:80
-      - ${NGINX_CONF_EXTERNAl_IP_PROD}:443:443
+      - ${EXTERNAl_IP_PROD}:80:80
+      - ${EXTERNAl_IP_PROD}:443:443
       # - "80:80"
       # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
       #- "9001:9001"
@@ -46,8 +46,8 @@ services:
     container_name: "${PROJECT_PREFIX_PROD}_mysql"
     restart: unless-stopped # Всегда перезапускайте контейнер, если он останавливается, за исключением того, что при остановке контейнера (вручную или иным образом) он не перезапускается даже после перезапуска демона Docker.always
     tty: true #подключает виртуальную консоль. Это нужно, чтобы команда cat не завершала работу, иначе контейнер остановится.
-    ports:
-      - "3306:3306" # Порты, которые пробросили локальныйПорт:портКонтейнера
+    expose:
+      - 3306
     environment: # Переменные из .env
       MYSQL_DATABASE: ${DB_DATABASE_PROD}
       MYSQL_USER: ${DB_USERNAME_PROD}
@@ -64,8 +64,8 @@ services:
     image: "redis:alpine"
     container_name: "${PROJECT_PREFIX_PROD}_redis"
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    expose:
+      - 6379
     networks:
       - laravel_net_prod
 
@@ -81,7 +81,7 @@ services:
     depends_on:
       - mysql
     ports:
-    - "8081:80"
+    - "${EXTERNAl_IP_PROD}:8081:80"
     volumes:
       - /sessions
     networks:
@@ -103,9 +103,8 @@ services:
       # Error log
       - ./docker-logs/php/php_errors.log:/var/log/php_errors.log
       - ./docker-logs/php/fpm-php.www.log:/var/log/fpm-php.www.log
-    
-    ports:
-      - "9000:9000"
+    expose:
+      - 9000
     networks:
       - laravel_net_prod
 
