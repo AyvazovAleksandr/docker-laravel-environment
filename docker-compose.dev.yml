@@ -30,7 +30,7 @@ services:
       - ${EXTERNAl_IP_DEV}:80:80
       - ${EXTERNAl_IP_DEV}:443:443
       # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
-      - "9001:9001"
+      - 9001:9001
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated
       - ./docker-logs/nginx:/var/log/nginx
