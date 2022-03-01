@@ -24,7 +24,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: ./compose/prod/nginx/prod/Dockerfile
+      dockerfile: ./compose/prod/nginx/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_nginx"
     ports:
       - ${EXTERNAl_IP_PROD}:80:80
@@ -32,8 +32,8 @@ services:
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated
       - ./docker-logs/nginx:/var/log/nginx
-      - ./compose/prod/nginx/prod/nginx.conf:/etc/nginx/nginx.conf
-      - ./compose/prod/nginx/prod/default.conf:/etc/nginx/conf.d/default.conf
+      - ./compose/prod/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./compose/prod/nginx/default.conf:/etc/nginx/conf.d/default.conf
     environment:
       NGINX_CONF_SERVER_NAMES_PROD: ${NGINX_CONF_SERVER_NAMES_PROD}
     depends_on:
