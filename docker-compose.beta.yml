@@ -2,21 +2,21 @@ version: "3.7" #https://docs.docker.com/compose/compose-file/compose-versioning/
 
 #Docker Networks
 # networks:
-#   laravel_net_dev:
-#     name: ${NETWORK_NAME_DEV}
+#   laravel_net_prod:
+#     name: ${NETWORK_NAME_PROD}
 #     ipam:
 #       driver: default
 #       config:
-#         - subnet: ${NETWORK_IP_DEV}
+#         - subnet: ${NETWORK_IP_PROD}
 
 networks:
-  laravel_net_dev:
-    name: ${NETWORK_NAME_DEV}
+  laravel_net_prod:
+    name: ${NETWORK_NAME_PROD}
 
 #Volumes
 volumes:
   dbdata:
-    name: "${PROJECT_PREFIX_DEV}_dbdata"
+    name: "${PROJECT_PREFIX_PROD}_dbdata"
     driver: local
 
 # Workflow
@@ -24,59 +24,60 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: ./compose/dev/nginx/dev/Dockerfile
-    container_name: "${PROJECT_PREFIX_DEV}_nginx"
+      dockerfile: ./compose/beta/nginx/prod/Dockerfile
+    container_name: "${PROJECT_PREFIX_PROD}_nginx"
     ports:
-      - ${EXTERNAl_IP_DEV}:80:80
-      - ${EXTERNAl_IP_DEV}:443:443
+      - ${EXTERNAl_IP_PROD}:80:80
+      - ${EXTERNAl_IP_PROD}:443:443
+      # - "80:80"
       # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
-      - "9001:9001"
+      #- "9001:9001"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated
       - ./docker-logs/nginx:/var/log/nginx
-      - ./compose/dev/nginx/dev/nginx.conf:/etc/nginx/nginx.conf
-      - ./compose/dev/nginx/dev/default.conf:/etc/nginx/conf.d/default.conf
+      - ./compose/beta/nginx/prod/nginx.conf:/etc/nginx/nginx.conf
+      - ./compose/beta/nginx/prod/default.conf:/etc/nginx/conf.d/default.conf
     environment:
-      NGINX_CONF_SERVER_NAMES_DEV: ${NGINX_CONF_SERVER_NAMES_DEV}
+      NGINX_CONF_SERVER_NAMES_PROD: ${NGINX_CONF_SERVER_NAMES_PROD}
     depends_on:
       - php
       - mysql
     networks:
-      - laravel_net_dev
+      - laravel_net_prod
 
   mysql:
     image: mysql:5.7.29 # Имя образа и его версия
-    container_name: "${PROJECT_PREFIX_DEV}_mysql"
+    container_name: "${PROJECT_PREFIX_PROD}_mysql"
     restart: unless-stopped # Всегда перезапускайте контейнер, если он останавливается, за исключением того, что при остановке контейнера (вручную или иным образом) он не перезапускается даже после перезапуска демона Docker.always
     tty: true #подключает виртуальную консоль. Это нужно, чтобы команда cat не завершала работу, иначе контейнер остановится.
     expose:
-      - 3306 # Порт контейнера
+      - 3306
     environment: # Переменные из .env
-      MYSQL_DATABASE: ${DB_DATABASE_DEV}
-      MYSQL_USER: ${DB_USERNAME_DEV}
-      MYSQL_PASSWORD: ${DB_PASSWORD_DEV}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_DEV}
+      MYSQL_DATABASE: ${DB_DATABASE_PROD}
+      MYSQL_USER: ${DB_USERNAME_PROD}
+      MYSQL_PASSWORD: ${DB_PASSWORD_PROD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_PROD}
     volumes:
-      #- ./compose/dev/mysql/my.cnf:/etc/mysql/my.cnf # Конфиги
+      #- ./compose/beta/mysql/my.cnf:/etc/mysql/my.cnf # Конфиги
       - dbdata:/var/lib/mysql/ # Место где БД хранится, можно и локальный volume.
       - ./docker-logs/mysql:/var/log/mysql
     networks:
-      - laravel_net_dev
+      - laravel_net_prod
 
   redis:
     image: "redis:alpine"
-    container_name: "${PROJECT_PREFIX_DEV}_redis"
+    container_name: "${PROJECT_PREFIX_PROD}_redis"
     restart: unless-stopped
     expose:
       - 6379
     networks:
-      - laravel_net_dev
+      - laravel_net_prod
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: "${PROJECT_PREFIX_DEV}_phpmyadmin"
+    container_name: "${PROJECT_PREFIX_PROD}_phpmyadmin"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_DEV}
+      MYSQL_ROOT_PASSWORD: secret
       PMA_HOST: mysql
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
@@ -84,51 +85,51 @@ services:
     depends_on:
       - mysql
     ports:
-    - "${EXTERNAl_IP_DEV}:8081:80"
+    - "${EXTERNAl_IP_PROD}:8081:80"
     volumes:
       - /sessions
     networks:
-      - laravel_net_dev
+      - laravel_net_prod
     links:
       - mysql
 
   php:
     build:
       context: .
-      dockerfile: ./compose/dev/php/Dockerfile
-    container_name: "${PROJECT_PREFIX_DEV}_php"
+      dockerfile: ./compose/beta/php/Dockerfile
+    container_name: "${PROJECT_PREFIX_PROD}_php"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated # Каталог, где будет жить наш проект
       # Enable xdebug
-      - ./compose/dev/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      # - ./compose/beta/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       # Custom php.ini
-      - ./compose/dev/php/config/php.ini:/usr/local/etc/php/php.ini
+      - ./compose/beta/php/config/php.ini:/usr/local/etc/php/php.ini
       # Error log
       - ./docker-logs/php/php_errors.log:/var/log/php_errors.log
       - ./docker-logs/php/fpm-php.www.log:/var/log/fpm-php.www.log
     expose:
       - 9000
     networks:
-      - laravel_net_dev
+      - laravel_net_prod
 
   composer:
     build:
       context: .
-      dockerfile: ./compose/dev/php/composer/Dockerfile
-    container_name: "${PROJECT_PREFIX_DEV}_composer"
+      dockerfile: ./compose/beta/php/composer/Dockerfile
+    container_name: "${PROJECT_PREFIX_PROD}_composer"
     volumes:
-      - ./www/ssuccessv2.com:/var/www/html # Каталог, где будет жить наш проект
+      - ./www/ssuccessv2.com:/var/www/html
     working_dir: /var/www/html
     depends_on:
       - php
     user: laravel
     networks:
-      - laravel_net_dev
+      - laravel_net_prod
     entrypoint: ['composer', '--ignore-platform-reqs']
 
   npm:
     image: node:15.0.1
-    container_name: "${PROJECT_PREFIX_DEV}_npm"
+    container_name: "${PROJECT_PREFIX_PROD}_npm"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html
     working_dir: /var/www/html
@@ -137,8 +138,8 @@ services:
   artisan:
     build:
       context: .
-      dockerfile: ./compose/dev/php/Dockerfile
-    container_name: "${PROJECT_PREFIX_DEV}_artisan"
+      dockerfile: ./compose/beta/php/Dockerfile
+    container_name: "${PROJECT_PREFIX_PROD}_artisan"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated
     depends_on:
@@ -147,4 +148,4 @@ services:
     user: laravel
     entrypoint: ['php', '/var/www/html/artisan']
     networks:
-      - laravel_net_dev
+      - laravel_net_prod

@@ -1,8 +1,8 @@
 FROM nginx:1.20.2-alpine
 
 # ADD Custom Config
-ADD ./compose/nginx/prod/nginx.conf /etc/nginx/nginx.conf
-ADD ./compose/nginx/prod/default.conf /etc/nginx/conf.d/default.conf
+ADD ./compose/beta/nginx/nginx.conf /etc/nginx/nginx.conf
+ADD ./compose/beta/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 # Make Directory - Workspace
 RUN mkdir -p /var/www/html

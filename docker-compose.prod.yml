@@ -24,19 +24,16 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: ./compose/nginx/prod/Dockerfile
+      dockerfile: ./compose/prod/nginx/prod/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_nginx"
     ports:
       - ${EXTERNAl_IP_PROD}:80:80
       - ${EXTERNAl_IP_PROD}:443:443
-      # - "80:80"
-      # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
-      #- "9001:9001"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated
       - ./docker-logs/nginx:/var/log/nginx
-      - ./compose/nginx/prod/nginx.conf:/etc/nginx/nginx.conf
-      - ./compose/nginx/prod/default.conf:/etc/nginx/conf.d/default.conf
+      - ./compose/prod/nginx/prod/nginx.conf:/etc/nginx/nginx.conf
+      - ./compose/prod/nginx/prod/default.conf:/etc/nginx/conf.d/default.conf
     environment:
       NGINX_CONF_SERVER_NAMES_PROD: ${NGINX_CONF_SERVER_NAMES_PROD}
     depends_on:
@@ -58,7 +55,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD_PROD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_PROD}
     volumes:
-      #- ./compose/mysql/my.cnf:/etc/mysql/my.cnf # Конфиги
+      #- ./compose/prod/mysql/my.cnf:/etc/mysql/my.cnf # Конфиги
       - dbdata:/var/lib/mysql/ # Место где БД хранится, можно и локальный volume.
       - ./docker-logs/mysql:/var/log/mysql
     networks:
@@ -96,14 +93,12 @@ services:
   php:
     build:
       context: .
-      dockerfile: ./compose/php/Dockerfile
+      dockerfile: ./compose/prod/php/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_php"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated # Каталог, где будет жить наш проект
-      # Enable xdebug
-      - ./compose/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       # Custom php.ini
-      - ./compose/php/config/php.ini-dev:/usr/local/etc/php/php.ini
+      - ./compose/prod/php/config/php.ini:/usr/local/etc/php/php.ini
       # Error log
       - ./docker-logs/php/php_errors.log:/var/log/php_errors.log
       - ./docker-logs/php/fpm-php.www.log:/var/log/fpm-php.www.log
@@ -115,7 +110,7 @@ services:
   composer:
     build:
       context: .
-      dockerfile: ./compose/php/composer/Dockerfile
+      dockerfile: ./compose/prod/php/composer/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_composer"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html
@@ -138,7 +133,7 @@ services:
   artisan:
     build:
       context: .
-      dockerfile: ./compose/php/Dockerfile
+      dockerfile: ./compose/prod/php/Dockerfile
     container_name: "${PROJECT_PREFIX_PROD}_artisan"
     volumes:
       - ./www/ssuccessv2.com:/var/www/html:delegated

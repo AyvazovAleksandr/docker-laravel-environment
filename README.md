@@ -1,3 +1,9 @@
+# Черновик
+
+## Устанока последней 8 версии 
+```
+docker-compose -f .\docker-compose.dev.yml run --rm composer create-project laravel/laravel=8.6.11 .
+```
 # Сборка для работы Laravel в Docker
 
 ## Список что есть (todo добавить версии и разделить на dev и prod среды)
